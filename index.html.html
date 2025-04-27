@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Leaflet Map Example</title>
+
+  <!-- Leaflet 스타일 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    /* html, body를 전체 100%로 설정 */
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 지도 스타일 */
+    #map {
+      width: 100%;
+      height: 100%; /* 화면 전체 채우기 */
+      min-height: 300px;
+    }
+
+    a.popup-button {
+      display: block;
+      background: #000;
+      color: #fff !important;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 20px;
+      text-decoration: none !important;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    a.popup-button:hover {
+      background: #fff;
+      color: #000 !important;
+      border: 1px solid #000;
+      text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+      #map {
+        height: 100%;
+        min-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 지도 들어갈 자리 -->
+<div id="map"></div>
+
+<!-- Leaflet 스크립트 -->
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  function createPcMainMap(containerId, projects) {
+    const oldMapContainer = document.getElementById(containerId);
+
+    // 기존 지도 삭제
+    if (window.pcMainMap) {
+      window.pcMainMap.remove();
+      window.pcMainMap = null;
+    }
+
+    // div 삭제하고 새로 생성
+    if (oldMapContainer) {
+      const parent = oldMapContainer.parentNode;
+      const newMapContainer = document.createElement('div');
+      newMapContainer.id = containerId;
+      newMapContainer.style.width = '100%';
+      newMapContainer.style.height = '100%'; // 화면 전체
+      newMapContainer.style.minHeight = '300px';
+      parent.replaceChild(newMapContainer, oldMapContainer);
+    }
+
+    // 새 div로 새 지도 생성
+    window.pcMainMap = L.map(containerId);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap contributors, © CartoDB'
+    }).addTo(window.pcMainMap);
+
+    // 마커 추가
+    const markers = projects.map(project => {
+      const marker = L.marker([project.lat, project.lng]).addTo(window.pcMainMap);
+      marker.bindPopup(`
+        <div style="padding:15px;">
+          <div style="font-size:24px;font-weight:bold;margin-bottom:20px;">${project.title}</div>
+          <div style="font-size:20px;line-height:1.5;margin-bottom:15px;">${project.description}</div>
+          <a href="${project.link}" target="_blank" class="popup-button">알아보기</a>
+        </div>
+      `);
+      return marker;
+    });
+
+    if (markers.length > 0) {
+      const group = L.featureGroup(markers);
+      window.pcMainMap.fitBounds(group.getBounds(), { padding: [30, 30] });
+    }
+
+    setTimeout(() => {
+      window.pcMainMap.invalidateSize();
+    }, 300);
+  }
+
+  // 페이지 로드되면 지도 생성
+  document.addEventListener('DOMContentLoaded', function() {
+    const projects = [
+      { title: "인도네시아 숨바와 섬", description: "인도네시아 숨바와 섬에 맹그로브 숲을 조성 및 복원하여 해양 생태계와 생물다양성을 회복하고 탄소를 흡수하여 기후변화에 대응합니다", link: "https://faafhub.com/SumbawaIndonesia", lat: -8.7035, lng: 117.4305 },
+      { title: "베트남 홍강 삼각주", description: "베트남 홍강 삼각주 지역에 맹그로브 숲을 조성 및 복원하여 해안 침식과 재난으로부터 지역사회를 보호하고 생물다양성 보전에 기여합니다", link: "https://faafhub.com/RedRiverDeltaVietNam", lat: 20.9239, lng: 105.6710 },
+      { title: "카자흐스탄 아바이 지역", description: "60,000 헥타르에 달하는 대규모 산불 피해지를 복원하여 불타버린 숲을 되살리고 생태계 서비스를 회복합니다", link: "https://faafhub.com/AbaiKazakhstan", lat: 49.7116, lng: 80.3560 },
+      { title: "몽골 바트숨베르 지역", description: "반복되는 산불로 사라진 산림을 조기에 복원하여 탄소를 흡수하고 사막화를 방지합니다", link: "https://faafhub.com/BatsumberMongolia", lat: 48.0017, lng: 106.2078 },
+      { title: "동티모르 마나투투 지역", description: "경제 성장과 산림 복원을 동시에 달성하기 위해 마나투투 지역의 훼손된 산림을 산림경관복원 방식으로 복구하고 혼농임업을 통해 지역 주민의 생계를 지원합니다", link: "https://faafhub.com/ManatutoTimorleste", lat: -8.8202, lng: 126.0320 },
+      { title: "라오스 참파삭 지역", description: "참파삭 지역의 산림훼손지 2,800ha를 성공적으로 복원한 성과를 기반으로 황폐화된 산림을 혼농임업을 통해 복원하고 대체 소득원을 개발합니다", link: "https://faafhub.com/ChampasakLao", lat: 14.8770, lng: 105.8220 }
+    ];
+
+    createPcMainMap('map', projects);
+  });
+</script>
+
+</body>
+</html>
